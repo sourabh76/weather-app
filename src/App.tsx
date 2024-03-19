@@ -2,6 +2,7 @@ import { useState, useEffect, KeyboardEvent } from "react";
 import SearchIcon from "./assets/search.svg";
 import WindIcon from "./assets/wind.svg";
 import HumidityIcon from "./assets/humidity.svg";
+import LocationIcon from "./assets/location.svg";
 import { findFlagUrlByIso2Code } from "country-flags-svg";
 import "./App.css";
 
@@ -9,17 +10,36 @@ type WeatherDataType = {
   temperature: string,
   humidity: string,
   windSpeed: string,
-  location: string,
+  location?: string,
   weatherImage: string,
-  country: string,
+  country?: string,
 } | null
+
+type PositionDataType = {
+    latitude: number,
+    longitude: number,
+}
  
 const App = () => {
     const [weatherData, setWeatherData] = useState<WeatherDataType>(null);
     const [city, setCity] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string>("");
+    const [position, setPosition] = useState<PositionDataType>({ latitude: 0, longitude: 0 });
  
     const api_key = "439d4b804bc8187953eb36d2a8c26a02";
+
+    useEffect(() => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+              setPosition({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              });
+            });
+          } else {
+            console.log("Geolocation is not available in your browser.");
+          }
+      }, []);
     
     useEffect(() => {
         const fetchRandomCityWeather = async () => {
@@ -95,6 +115,28 @@ const App = () => {
         }
     };
 
+    const myLocation = async () => {
+        try {
+            const url = `https://openweathermap.org/data/2.5/onecall?lat=${position.latitude}&lon=${position.latitude}&units=metric&appid=${api_key}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            setWeatherData({
+                temperature: `${Math.round(data.current.temp)}°C`,
+                humidity: `${data.current.humidity}%`,
+                windSpeed: `${data.current.wind_speed}m/s`,
+                weatherImage: data.current.weather[0].description,
+            });
+
+        } catch (error) {
+            console.error("Error fetching weather data: ", error);
+            setWeatherData(null);
+            setErrorMessage(
+                "Failed to fetch weather data. Please try again later."
+            );
+        }
+    };
+
     const getWeatherImage = (description: string) => {
         let imageIcon;
         switch (description) {
@@ -132,6 +174,7 @@ const App = () => {
                 break;
         
             case "mist":
+            case "haze":
                 imageIcon = "http://openweathermap.org/img/wn/50d@2x.png"
                 break;
             default:
@@ -146,8 +189,8 @@ const App = () => {
             search();
         }
     };
- 
-    return (
+
+      return (
         <div className="container">
             <div className="top-bar">
                 <input
@@ -158,8 +201,11 @@ const App = () => {
                     onChange={(e) => setCity(e.target.value)}
                     onKeyPress={handleKeyPress}
                 />
-                <button className="search-icon" onClick={search}>
+                <button className="button" onClick={search}>
                     <img src={SearchIcon} alt="search" />
+                </button>
+                <button className="button" onClick={myLocation}>
+                    <img src={LocationIcon} alt="myLocation" />
                 </button>
             </div>
  
