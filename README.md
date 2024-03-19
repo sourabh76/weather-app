@@ -2,6 +2,9 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+![image](https://github.com/sourabh76/weather-app/assets/138895159/6ca69c87-2f84-4acf-af59-f685911485cf)
+
+
 ## Available Scripts
 
 In the project directory, you can run:
